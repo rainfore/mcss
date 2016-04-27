@@ -1,5 +1,6 @@
-*node_modules*
-*sublime*
+node_modules
+private
 .sourcemap
-private/
+.DS_Store
 npm-debug.log
+*sublime*
