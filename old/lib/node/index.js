@@ -148,31 +148,7 @@ Block.prototype.abstract = function(){
 
 
 
-// list is a block statement
-// defaults is default params
-function Func(params, block,name){
-    this.type = 'func'
-    this.params = params || [];
-    this.block = block;
-}
 
-Func.prototype.clone = function(){
-    var clone = new Func(cloneNode(this.params), this.block);
-    return clone;
-}
-
-
-function Param(name, dft, rest){
-    this.type = 'param'
-    this.name = name;
-    this.default = dft;
-    this.rest = rest || false;
-}
-
-Param.prototype.clone = function(){
-    var clone = new Param(this.name, cloneNode(this.default), this.rest);
-    return clone;
-}
 
 
 
@@ -270,25 +246,6 @@ ReturnStmt.prototype.clone = function(){
 }
 
 
-
-function Call(name, args, named ,lineno){
-    this.type = 'call';
-    this.name = name;
-    this.args = args || [];
-    this.named = named;
-    this.lineno = lineno;
-}
-
-Call.prototype.clone = function(){
-    var clone = new Call(this.name, cloneNode(this.args), this.named);
-    return clone;
-}
-
-exports.call = function(name, args, named, lineno){
-    var node = new(Call)(name, args, named, lineno);
-    return node;
-
-}
 
 function FontFace(block){
     this.type = 'fontface';

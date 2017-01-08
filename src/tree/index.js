@@ -215,6 +215,26 @@ class CompoundIdent {
     }
 }
 
+// list is a block statement
+// defaults is default params
+class Func {
+    constructor(params = [], block, name) {
+        Object.assign(this, {params, block, name});
+    }
+}
+
+class Param {
+    constructor(name, dft, rest = false) {
+        Object.assign(this, {name, dft, rest});
+    }
+}
+
+class FuncCall {
+    constructor(name, args, named, lineno) {
+        Object.assign(this, {name, args, named, lineno});
+    }
+}
+
 
 export {
     Node,
@@ -231,5 +251,8 @@ export {
     Operator,
     Range,
     Unary,
-    Dimension
+    Dimension,
+    Func,
+    Param,
+    FuncCall
 }

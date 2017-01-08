@@ -193,7 +193,7 @@ class Parser {
         else if(token.type === 'VAR') {
             switch(this.ll(2).type) {
                 case '(':
-                    node = this.fnCall();
+                    node = this.funcCall();
                     this.matchSemiColonIfNoBlock();
                     break;
                 case ':':
@@ -211,7 +211,7 @@ class Parser {
                     this.error('UNEXPECT token after VARIABLE', this.ll(2))
             }
         } else if(token.type === 'FUNCTION') {
-            node = this.fnCall();
+            node = this.funcCall();
             this.matchSemiColonIfNoBlock();
         } else if(isSelectorSep(token.type))
             node = this.ruleset(true);
@@ -653,7 +653,7 @@ class Parser {
             case 'TEXT':
                 return this.compoundIdent();
             case 'FUNCTION':
-                return this.fnCall();
+                return this.funcCall();
             case 'HASH':
                 this.next();
                 let value = token.value;
@@ -745,13 +745,56 @@ class Parser {
         }
     }
 
-    // fnCall
+    func() {
+        let params;
+        if(this.eat('(')) {
+            this.eat('WS');
+            params = this.params();
+            this.match(')');
+        }
+        let block = this.block();
+        return new tree.Func(params, block);
+    }
+
+    params() {
+        let rest = 0, params = [];
+        let token = this.ll();
+        if(token.type !== ')') {
+            do {
+                let param = this.param();
+                if(param.rest) rest++;
+                params.push(param);
+            } while(this.eat(','));
+            if(rest >= 2)
+                this.error('can not have more than 2 rest param', token.lineno);
+            this.eat('WS');
+        }
+        return params;
+    }
+
+    // mixin' params
+    param() {
+        let token = this.ll();
+        let name = token.value, dft, rest = false;
+        this.match('VAR');
+        if(this.eat('...'))
+            rest = true;
+        if(this.eat('=')) {
+            if(rest)
+                this.error('rest type param can"t have default params', token.lineno);
+            dft = this.values();
+        }
+        return new tree.Param(name, dft, rest);
+    }
+
+
+    // funcCall
     //  : CALL FUNCTION '('  expresion * ')'
-    fnCall() {
+    funcCall() {
         let token = this.ll();
         this.match('FUNCTION', 'VAR');
         if(token.args)
-            return new tree.Call(token.value, token.args, null, token.lineno);
+            return new tree.FuncCall(token.value, token.args, null, token.lineno);
         this.eat('WS');
         this.match('(');
         this.enter(STATES.FUNCTION_CALL);
@@ -759,7 +802,7 @@ class Parser {
         let pargs = this.ll().type !== ')' ? this.args() : {args:[]};
         this.leave(states.FUNCTION_CALL);
         this.match(')');
-        return new tree.Call(token.value, pargs.args, pargs.named, token.lineno);
+        return new tree.FuncCall(token.value, pargs.args, pargs.named, token.lineno);
     }
 
     //@TODO start named arguments
@@ -796,7 +839,7 @@ class Parser {
 
         // if(args.type !== 'valueslist') args = [args];
         // else args = args.list;
-        return tree.Call(token.value, pargs.args, pargs.named, token.lineno);
+        return tree.FuncCall(token.value, pargs.args, pargs.named, token.lineno);
     }
 
     /**
